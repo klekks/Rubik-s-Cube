@@ -5,7 +5,7 @@
 #include "../params.h"
 
 extern unsigned ROTATION_DELAY;
-
+extern Queue TQ;
 
 #define MAX_SOLUTION_LENGTH 10000
 
@@ -1067,10 +1067,13 @@ char* SolutionF2L(RCube cube) {
 void MakeTransformation(RCube* cube, char* transf, HDC hDC, char show) {
 	Queue* q = Optimize(transf);
 	void(*f)(RCube*, HDC, char) = NULL;
-	while (q->size > 0) {
+	if (!show) while (q->size > 0) {
 		f = QueuePop(q);
 		f(cube, hDC, show);
-	}
+	} 
+    else while (q->size > 0) 
+        QueuePush(&TQ, QueuePop(q));
+    
 	free(q);
 }
 

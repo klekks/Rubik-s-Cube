@@ -19,4 +19,5 @@
 #define HAS_MENU 1
 #define D_ALPHA 9
 
+#define TQ transformation_queue
 #endif // PARAMS_H_INCLUDED

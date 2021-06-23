@@ -10,6 +10,7 @@
 #include "params.h"
 
 extern unsigned ROTATION_DELAY;
+extern Queue TQ;
 
 #ifdef HAS_MENU
     #include "framework/menu.h"
@@ -120,21 +121,30 @@ INT WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
         {
             /* OpenGL animation code goes here */
 
-            glClearColor(BACKGROUND_COLOR);
-            glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+           
+            if (TQ.size > 0) {
+                void (*f)(RCube*, HDC, char);
+                f = QueuePop(&TQ);
+                f(cube, hDC, 1);
+            }
+            else {
+                glClearColor(BACKGROUND_COLOR);
+                glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-            glPushMatrix();
+                glPushMatrix();
 
-            CameraApply();
-            CheckingCursor(0, 0);
+                CameraApply();
+                CheckingCursor(0, 0);
+                ShowPartOfCube(*cube, 0, 3, 0, 3, 0, 3);
+
+                glPopMatrix();
+
+                SwapBuffers(hDC);
+
+                Sleep(1);
+            }
             
-            ShowPartOfCube(*cube, 0, 3, 0, 3, 0, 3);
             
-            glPopMatrix();
-
-            SwapBuffers(hDC);
-
-            Sleep (1);
         }
     }
 
@@ -177,11 +187,12 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
                 break;
 
             case EXIT_BTN:
+                QueueClear(&TQ);
                 bQuit = TRUE;
                 break;
 
             case LOAD_BTN:
-
+                QueueClear(&TQ);
                 path = LoadFile(hwnd);
                 RCube* tmp_cube = LoadCube(path, hwnd);
 
@@ -193,11 +204,13 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
                 break;
 
             case NEW_BTN:
+                QueueClear(&TQ);
                 free(cube);
                 cube = CreateCube();
                 break;
 
             case MIX_BTN:
+                QueueClear(&TQ);
                 MixCube(&cube, hDC);
                 printf("MIX\n");
                 break;
@@ -273,9 +286,11 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
                     else A_RCubeRotateZMinus(cube, hDC, 1);
                     break;
                 case 0x4D: //M
+                    QueueClear(&TQ);
                     MixCube(&cube, hDC);
                     break;
                 case 0x4E: //N
+                    QueueClear(&TQ);
                     free(cube);
                     cube = CreateCube();
                     break;
@@ -285,6 +300,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
                     free(path);
                     break;
                 case 0x49: //I
+                    QueueClear(&TQ);
                     path = LoadFile(hwnd);
                     RCube* tmp_cube = LoadCube(path, hwnd);
 
